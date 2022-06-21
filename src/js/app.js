@@ -1,4 +1,3 @@
-import Tasks from "./Tasks";
+import Task from "./Task";
 
-const tasks = new Tasks('tasks_area');
-window.tasks = tasks;
+const task = new Task('tasks_area','modal_area');

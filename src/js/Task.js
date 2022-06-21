@@ -42,10 +42,7 @@ export default class Task {
                 this.areaForModal.classList.toggle('active');
             });
 
-            formNewTicket.append(nameNewTicket);
-            formNewTicket.append(descriptionNewTicket);
-            formNewTicket.append(cancelNewTicket);
-            formNewTicket.append(createNewTicket);
+            formNewTicket.append(nameNewTicket, descriptionNewTicket, cancelNewTicket, createNewTicket);
 
             this.areaForModal.append(formNewTicket);
 
@@ -58,17 +55,20 @@ export default class Task {
         //Добавить задачи в список
         arrTask.forEach(element => {
             const li = document.createElement('li');
-            li.addEventListener('click',(evt)=>{
-                if(evt.target == li){
+            li.addEventListener('click', (evt) => {
+                if (evt.target == li) {
                     this.requestTicket(element.id);
                 }
-                
+
             });
 
             //Добавить кнопку редактировать
             const buttonEdit = document.createElement('button');
             buttonEdit.innerText = '\u270E';
             buttonEdit.classList.add('task_button');
+            buttonEdit.addEventListener('click', () => {
+                this.editTicketModal(element.id);
+            });
             buttonEdit.dataset.id = element.id;
 
             //Добавить кнопку удалить
@@ -76,7 +76,7 @@ export default class Task {
             buttonDel.innerText = '\u2716'
             buttonDel.classList.add('task_button');
             buttonDel.dataset.id = element.id;
-            buttonDel.addEventListener('click',()=>{
+            buttonDel.addEventListener('click', () => {
                 this.removeTicket(element.id);
             });
 
@@ -88,8 +88,7 @@ export default class Task {
                 li.classList.add('completed');
             }
             //Вставка элементов
-            li.append(buttonEdit);
-            li.append(buttonDel);
+            li.append(buttonEdit, buttonDel);
             listtask.append(li);
         });
 
@@ -110,11 +109,9 @@ export default class Task {
         // </ul>
         // `;
         this.areaTask.innerHTML = '';
-        this.areaTask.append(buttonAddTask);
-        this.areaTask.append(listtask);
+        this.areaTask.append(buttonAddTask, listtask);
     }
     renderModalTicket(ticket) {
-        console.log(ticket)
         this.areaForModal.innerHTML = '';
         this.areaForModal.classList.toggle('active');
 
@@ -123,14 +120,14 @@ export default class Task {
 
         const nameNewTicket = document.createElement('p');
         nameNewTicket.classList.add('name_new_ticket');
-        nameNewTicket.innerText ='Название: '+ ticket[0].name;
+        nameNewTicket.innerText = 'Название: ' + ticket[0].name;
 
         const descriptionNewTicket = document.createElement('p');
         descriptionNewTicket.classList.add('description_new_ticket');
-        descriptionNewTicket.innerText = 'Описание: '+ticket[0].description;
+        descriptionNewTicket.innerText = 'Описание: ' + ticket[0].description;
 
         const dateTicket = document.createElement('p');
-        dateTicket.innerText = 'Дата создания: '+ new Date(ticket[0].created).toLocaleString();
+        dateTicket.innerText = 'Дата создания: ' + new Date(ticket[0].created).toLocaleString();
 
         const cancelNewTicket = document.createElement('button');
         cancelNewTicket.innerText = 'Отменить';
@@ -139,12 +136,77 @@ export default class Task {
             this.areaForModal.classList.toggle('active');
         });
 
-        formNewTicket.append(nameNewTicket);
-        formNewTicket.append(descriptionNewTicket);
-        formNewTicket.append(dateTicket);
-        formNewTicket.append(cancelNewTicket);
+        formNewTicket.append(nameNewTicket, descriptionNewTicket, dateTicket, cancelNewTicket);
 
         this.areaForModal.append(formNewTicket);
+    }
+    editTicketModal(id) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `http://localhost:7070?method=ticketById&id=${id}`);
+        xhr.addEventListener('readystatechange', () => {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.response);
+                    this.areaForModal.innerHTML = '';
+                    this.areaForModal.classList.toggle('active');
+
+                    const formNewTicket = document.createElement('form');
+                    formNewTicket.classList.add('form_new_ticket');
+
+                    const labelName = document.createElement('label');
+                    labelName.innerText = 'Имя задачи:';
+                    labelName.htmlFor = 'name-ticket';
+
+                    const nameNewTicket = document.createElement('input');
+                    nameNewTicket.id = 'name-ticket';
+                    nameNewTicket.classList.add('name_new_ticket');
+                    nameNewTicket.value = response[0].name;
+
+                    const labelDescription = document.createElement('label');
+                    labelDescription.innerText = 'Описание задачи:';
+                    labelDescription.htmlFor = 'description-ticket';
+
+                    const descriptionNewTicket = document.createElement('textarea');
+                    descriptionNewTicket.id = 'description-ticket';
+                    descriptionNewTicket.classList.add('description_new_ticket');
+                    descriptionNewTicket.value = response[0].description;
+
+                    const labelStatus = document.createElement('label');
+                    labelStatus.innerText = 'Статус выполнения:';
+                    labelStatus.htmlFor = 'status-ticket';
+
+                    const statusNewTicket = document.createElement('input');
+                    statusNewTicket.id = 'status-ticket';
+                    statusNewTicket.type = 'checkbox';
+                    statusNewTicket.classList.add('status_new_ticket');
+                    statusNewTicket.checked = response[0].status;
+                    console.dir(statusNewTicket);
+
+                    const createNewTicket = document.createElement('button');
+                    createNewTicket.innerText = 'Редактировать';
+                    createNewTicket.classList.add('create_new_ticket');
+                    createNewTicket.addEventListener('click', evt => {
+                        evt.preventDefault();
+                        this.editTicket(response[0].id, nameNewTicket.value, descriptionNewTicket.value, statusNewTicket.checked);
+                        this.areaForModal.classList.toggle('active');
+                    });
+
+                    const cancelNewTicket = document.createElement('button');
+                    cancelNewTicket.innerText = 'Отменить';
+                    cancelNewTicket.addEventListener('click', evt => {
+                        evt.preventDefault();
+                        this.areaForModal.classList.toggle('active');
+                    });
+
+                    formNewTicket.append(labelName, nameNewTicket,labelDescription, descriptionNewTicket,labelStatus, statusNewTicket, cancelNewTicket, createNewTicket);
+
+                    this.areaForModal.append(formNewTicket);
+                }
+            }
+        });
+        xhr.send();
+
+
     }
 
     requestAllTicket() {
@@ -186,7 +248,7 @@ export default class Task {
         xhr.send(JSON.stringify({ name: name, description: desc }));
 
     }
-    removeTicket(id){
+    removeTicket(id) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', 'http://localhost:7070?method=removeTicket');
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -198,6 +260,20 @@ export default class Task {
             }
         });
         xhr.send(JSON.stringify({ id: id }));
+    }
+
+    editTicket(id, name, description, status) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://localhost:7070?method=editTicket');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.addEventListener('readystatechange', () => {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    this.requestAllTicket();
+                }
+            }
+        });
+        xhr.send(JSON.stringify({ id: id, name: name, description: description, status: status }));
     }
 
 }
